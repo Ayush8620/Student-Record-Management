@@ -8,16 +8,16 @@ import { useModal } from '../../context/ModalContext';
 export default function MarkAttendance() {
   const { currentUser } = useAuth();
   const { showAlert } = useModal();
-  
+
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([]);
-  
+
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [lectureNumber, setLectureNumber] = useState('1');
-  
+
   const [attendanceData, setAttendanceData] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -31,7 +31,7 @@ export default function MarkAttendance() {
           const userData = userDoc.data();
           const assignedClasses = userData.assignedClasses || [];
           const assignedSubjects = userData.subjects || [];
-          
+
           setClasses(assignedClasses.map(c => ({ id: c, name: c })));
           setSubjects(assignedSubjects.map(s => ({ id: s, name: s })));
         }
@@ -51,7 +51,7 @@ export default function MarkAttendance() {
       const allStudents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       const studentList = allStudents.filter(s => s.classId === selectedClass);
       setStudents(studentList);
-      
+
       // Initialize attendance data (default present)
       const initialData = {};
       studentList.forEach(s => {
@@ -70,7 +70,7 @@ export default function MarkAttendance() {
   const handleToggleAttendance = (studentId) => {
     setAttendanceData(prev => ({
       ...prev,
-      [studentId]: prev[studentId] === 'present' ? 'absent' : (prev[studentId] === 'absent' ? 'leave' : 'present')
+      [studentId]: prev[studentId] === 'present' ? 'absent' : (prev[studentId] === 'absent' ? 'Bunk' : 'present')
     }));
   };
 
@@ -132,12 +132,12 @@ export default function MarkAttendance() {
           <input type="number" min="1" max="10" value={lectureNumber} onChange={e => setLectureNumber(e.target.value)} className="w-full border border-gray-300 rounded-md p-2" />
         </div>
         <div className="lg:col-span-4 flex justify-end">
-          <button 
+          <button
             onClick={handleFetchStudents}
             disabled={loading}
             className="bg-gray-800 text-white px-6 py-2 rounded-md hover:bg-gray-900 flex items-center gap-2"
           >
-            {loading ? <Loader2 className="animate-spin w-4 h-4"/> : <Search className="w-4 h-4"/>} Load Students
+            {loading ? <Loader2 className="animate-spin w-4 h-4" /> : <Search className="w-4 h-4" />} Load Students
           </button>
         </div>
       </div>
@@ -146,10 +146,10 @@ export default function MarkAttendance() {
       {students.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-             <h2 className="text-lg font-medium text-gray-800">Student List</h2>
-             <button disabled={submitting} onClick={handleSubmit} className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 text-sm font-medium flex items-center gap-2">
-               {submitting && <Loader2 className="animate-spin w-4 h-4"/>} Submit Attendance
-             </button>
+            <h2 className="text-lg font-medium text-gray-800">Student List</h2>
+            <button disabled={submitting} onClick={handleSubmit} className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 text-sm font-medium flex items-center gap-2">
+              {submitting && <Loader2 className="animate-spin w-4 h-4" />} Submit Attendance
+            </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -167,16 +167,15 @@ export default function MarkAttendance() {
                     <td className="p-4 font-medium text-gray-500">{idx + 1}</td>
                     <td className="p-4 font-medium text-gray-900">{student.name}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        attendanceData[student.id] === 'present' ? 'bg-green-100 text-green-800' :
-                        attendanceData[student.id] === 'absent' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${attendanceData[student.id] === 'present' ? 'bg-green-100 text-green-800' :
+                          attendanceData[student.id] === 'absent' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                        }`}>
                         {attendanceData[student.id].toUpperCase()}
                       </span>
                     </td>
                     <td className="p-4 text-right">
-                      <button 
+                      <button
                         onClick={() => handleToggleAttendance(student.id)}
                         className="text-gray-500 hover:text-primary-600 bg-gray-100 hover:bg-primary-50 px-3 py-1 rounded-md transition-colors"
                       >
