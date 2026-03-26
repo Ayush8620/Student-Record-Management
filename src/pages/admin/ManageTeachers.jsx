@@ -45,6 +45,7 @@ export default function ManageTeachers() {
     showConfirm("Are you sure you want to remove this teacher?", async () => {
       try {
         await deleteDoc(doc(db, "users", teacherId));
+        await deleteDoc(doc(db, "teachers", teacherId));
         fetchTeachers();
       } catch (error) {
         console.error("Error deleting teacher:", error);
@@ -83,6 +84,15 @@ export default function ManageTeachers() {
         assignedClasses: classesArray,
         subjects: subjectsArray,
         createdAt: new Date().toISOString()
+      });
+
+      await setDoc(doc(db, "teachers", newUserId), {
+        name: formData.name,
+        email: formData.email,
+        department: formData.department,
+        assignedClasses: classesArray,
+        subjects: subjectsArray,
+        uid: newUserId
       });
 
       setFormData({ name: '', email: '', password: '', department: '', assignedClasses: '', subjects: '' });

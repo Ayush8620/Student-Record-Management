@@ -45,6 +45,7 @@ export default function ManageStudents() {
     showConfirm("Are you sure you want to remove this student?", async () => {
       try {
         await deleteDoc(doc(db, "users", studentId));
+        await deleteDoc(doc(db, "students", studentId));
         fetchStudents();
       } catch (error) {
         console.error("Error deleting student:", error);
@@ -83,6 +84,16 @@ export default function ManageStudents() {
         semester: formData.semester,
         classId: formData.classId,
         createdAt: new Date().toISOString()
+      });
+
+      // 4. Add to 'students' collection
+      await setDoc(doc(db, "students", newUserId), {
+        name: formData.name,
+        email: formData.email,
+        department: formData.department,
+        semester: formData.semester,
+        classId: formData.classId,
+        uid: newUserId
       });
 
       // Reset form and refresh list

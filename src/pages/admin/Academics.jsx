@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase/config';
-import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { Plus, Loader2, Book, Layers, Trash2 } from 'lucide-react';
 import { useModal } from '../../context/ModalContext';
 
@@ -74,7 +74,7 @@ export default function Academics() {
     e.preventDefault();
     setIsAddingClass(true);
     try {
-      await addDoc(collection(db, "classes"), classForm);
+      await setDoc(doc(db, "classes", classForm.name), classForm);
       setClassForm({ name: '', department: '', semester: '' });
       fetchClasses();
     } catch (error) {
@@ -88,7 +88,7 @@ export default function Academics() {
     e.preventDefault();
     setIsAddingSubject(true);
     try {
-      await addDoc(collection(db, "subjects"), subjectForm);
+      await setDoc(doc(db, "subjects", subjectForm.name), subjectForm);
       setSubjectForm({ name: '', code: '' });
       fetchSubjects();
     } catch (error) {
