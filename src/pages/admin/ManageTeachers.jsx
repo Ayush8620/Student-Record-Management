@@ -4,8 +4,10 @@ import { secondaryAuth } from '../../firebase/adminAuth';
 import { collection, getDocs, query, where, setDoc, doc, deleteDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { Plus, Loader2 } from 'lucide-react';
+import { useModal } from '../../context/ModalContext';
 
 export default function ManageTeachers() {
+  const { showAlert, showConfirm } = useModal();
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -39,15 +41,16 @@ export default function ManageTeachers() {
     fetchTeachers();
   }, []);
 
-  const handleDeleteTeacher = async (teacherId) => {
-    if (!window.confirm("Are you sure you want to remove this teacher?")) return;
-    try {
-      await deleteDoc(doc(db, "users", teacherId));
-      fetchTeachers();
-    } catch (error) {
-      console.error("Error deleting teacher:", error);
-      alert("Failed to delete teacher.");
-    }
+  const handleDeleteTeacher = (teacherId) => {
+    showConfirm("Are you sure you want to remove this teacher?", async () => {
+      try {
+        await deleteDoc(doc(db, "users", teacherId));
+        fetchTeachers();
+      } catch (error) {
+        console.error("Error deleting teacher:", error);
+        showAlert("Failed to delete teacher.", "error");
+      }
+    });
   };
 
   const handleChange = (e) => {
@@ -84,10 +87,10 @@ export default function ManageTeachers() {
 
       setFormData({ name: '', email: '', password: '', department: '', assignedClasses: '', subjects: '' });
       fetchTeachers();
-      alert("Teacher added successfully!");
+      showAlert("Teacher added successfully!", "success");
     } catch (error) {
       console.error("Error adding teacher:", error);
-      alert("Failed to add teacher: " + error.message);
+      showAlert("Failed to add teacher: " + error.message, "error");
     } finally {
       setIsAdding(false);
     }

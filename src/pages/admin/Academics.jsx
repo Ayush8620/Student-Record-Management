@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { db } from '../../firebase/config';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { Plus, Loader2, Book, Layers } from 'lucide-react';
+import { useModal } from '../../context/ModalContext';
 
 export default function Academics() {
+  const { showAlert } = useModal();
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
@@ -52,7 +54,7 @@ export default function Academics() {
       setClassForm({ name: '', department: '', semester: '' });
       fetchClasses();
     } catch (error) {
-      alert("Failed to add class");
+      showAlert("Failed to add class", "error");
     } finally {
       setIsAddingClass(false);
     }
@@ -66,7 +68,7 @@ export default function Academics() {
       setSubjectForm({ name: '', code: '' });
       fetchSubjects();
     } catch (error) {
-      alert("Failed to add subject");
+      showAlert("Failed to add subject", "error");
     } finally {
       setIsAddingSubject(false);
     }

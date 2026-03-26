@@ -4,8 +4,10 @@ import { secondaryAuth } from '../../firebase/adminAuth';
 import { collection, addDoc, getDocs, query, where, setDoc, doc, deleteDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { Plus, Loader2 } from 'lucide-react';
+import { useModal } from '../../context/ModalContext';
 
 export default function ManageStudents() {
+  const { showAlert, showConfirm } = useModal();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -39,15 +41,16 @@ export default function ManageStudents() {
     fetchStudents();
   }, []);
 
-  const handleDeleteStudent = async (studentId) => {
-    if (!window.confirm("Are you sure you want to remove this student?")) return;
-    try {
-      await deleteDoc(doc(db, "users", studentId));
-      fetchStudents();
-    } catch (error) {
-      console.error("Error deleting student:", error);
-      alert("Failed to delete student.");
-    }
+  const handleDeleteStudent = (studentId) => {
+    showConfirm("Are you sure you want to remove this student?", async () => {
+      try {
+        await deleteDoc(doc(db, "users", studentId));
+        fetchStudents();
+      } catch (error) {
+        console.error("Error deleting student:", error);
+        showAlert("Failed to delete student.", "error");
+      }
+    });
   };
 
   const handleChange = (e) => {
@@ -85,10 +88,10 @@ export default function ManageStudents() {
       // Reset form and refresh list
       setFormData({ name: '', email: '', password: '', department: '', semester: '', classId: '' });
       fetchStudents();
-      alert("Student added successfully!");
+      showAlert("Student added successfully!", "success");
     } catch (error) {
       console.error("Error adding student:", error);
-      alert("Failed to add student: " + error.message);
+      showAlert("Failed to add student: " + error.message, "error");
     } finally {
       setIsAdding(false);
     }

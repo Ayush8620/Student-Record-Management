@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase/config';
-import { collection, query, addDoc, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, addDoc, getDocs, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
-import { Megaphone, Plus, Loader2 } from 'lucide-react';
+import { Megaphone, Plus, Loader2, Trash2 } from 'lucide-react';
+import { useModal } from '../../context/ModalContext';
 
 export default function Announcements() {
   const { currentUser, userRole } = useAuth();
+  const { showAlert, showConfirm } = useModal();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -48,10 +50,22 @@ export default function Announcements() {
       setForm({ title: '', message: '', targetRole: 'all' });
       fetchAnnouncements();
     } catch (err) {
-      alert("Failed to add announcement");
+      showAlert("Failed to add announcement", "error");
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const handleDelete = (id) => {
+    showConfirm("Are you sure you want to delete this announcement?", async () => {
+      try {
+        await deleteDoc(doc(db, 'announcements', id));
+        setAnnouncements(prev => prev.filter(a => a.id !== id));
+      } catch (error) {
+        console.error("Error deleting announcement:", error);
+        showAlert("Failed to delete announcement", "error");
+      }
+    });
   };
 
   return (
@@ -91,9 +105,20 @@ export default function Announcements() {
             <div key={a.id} className="p-6 hover:bg-gray-50 transition-colors">
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-lg font-semibold text-gray-900">{a.title}</h3>
-                <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-full uppercase">
-                  {a.targetRole}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-full uppercase">
+                    {a.targetRole}
+                  </span>
+                  {userRole === 'admin' && (
+                    <button 
+                      onClick={() => handleDelete(a.id)}
+                      className="text-red-500 hover:bg-red-50 p-1 rounded-md transition-colors"
+                      title="Delete Announcement"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
               <p className="text-gray-700 whitespace-pre-wrap">{a.message}</p>
               <div className="mt-4 text-xs text-gray-400">

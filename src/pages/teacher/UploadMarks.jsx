@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase/config';
-import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, getDoc, doc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { Loader2, Search } from 'lucide-react';
+import { useModal } from '../../context/ModalContext';
 
 export default function UploadMarks() {
   const { currentUser } = useAuth();
+  const { showAlert } = useModal();
   
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -22,17 +24,26 @@ export default function UploadMarks() {
 
   useEffect(() => {
     const fetchDropdowns = async () => {
-      const clsSnap = await getDocs(collection(db, "classes"));
-      setClasses(clsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      
-      const subSnap = await getDocs(collection(db, "subjects"));
-      setSubjects(subSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      if (!currentUser) return;
+      try {
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const assignedClasses = userData.assignedClasses || [];
+          const assignedSubjects = userData.subjects || [];
+          
+          setClasses(assignedClasses.map(c => ({ id: c, name: c })));
+          setSubjects(assignedSubjects.map(s => ({ id: s, name: s })));
+        }
+      } catch (error) {
+        console.error("Error fetching teacher dropdowns", error);
+      }
     };
     fetchDropdowns();
-  }, []);
+  }, [currentUser]);
 
   const handleFetchStudents = async () => {
-    if (!selectedClass) return alert("Select a class first");
+    if (!selectedClass) return showAlert("Select a class first", "error");
     setLoading(true);
     try {
       const q = query(collection(db, 'users'), where('role', '==', 'student'));
@@ -48,7 +59,7 @@ export default function UploadMarks() {
       setMarksData(initialData);
     } catch (error) {
       console.error(error);
-      alert("Failed to fetch students");
+      showAlert("Failed to fetch students", "error");
     } finally {
       setLoading(false);
     }
@@ -63,7 +74,7 @@ export default function UploadMarks() {
 
   const handleSubmit = async () => {
     if (!selectedClass || !selectedSubject || !examType || !maxMarks) {
-      return alert("Fill all details");
+      return showAlert("Fill all details", "error");
     }
     setSubmitting(true);
     try {
@@ -80,11 +91,11 @@ export default function UploadMarks() {
         });
       });
       await Promise.all(batchPromises);
-      alert("Marks uploaded successfully");
+      showAlert("Marks uploaded successfully", "success");
       setStudents([]); // Reset screen
     } catch (error) {
       console.error(error);
-      alert("Failed to upload marks");
+      showAlert("Failed to upload marks", "error");
     } finally {
       setSubmitting(false);
     }
@@ -107,7 +118,7 @@ export default function UploadMarks() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
           <select value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} className="w-full border border-gray-300 rounded-md p-2">
             <option value="">Select Subject...</option>
-            {subjects.map(s => <option key={s.id} value={s.name}>{s.name} ({s.code})</option>)}
+            {subjects.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
           </select>
         </div>
         <div>

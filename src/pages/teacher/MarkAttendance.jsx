@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase/config';
-import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, getDoc, doc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { Loader2, Check, X, Search } from 'lucide-react';
+import { useModal } from '../../context/ModalContext';
 
 export default function MarkAttendance() {
   const { currentUser } = useAuth();
+  const { showAlert } = useModal();
   
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -21,20 +23,27 @@ export default function MarkAttendance() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    // Fetch classes and subjects assigned to this teacher
-    // For MVP, we'll fetch all classes and subjects or just all classes.
     const fetchDropdowns = async () => {
-      const clsSnap = await getDocs(collection(db, "classes"));
-      setClasses(clsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      
-      const subSnap = await getDocs(collection(db, "subjects"));
-      setSubjects(subSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      if (!currentUser) return;
+      try {
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const assignedClasses = userData.assignedClasses || [];
+          const assignedSubjects = userData.subjects || [];
+          
+          setClasses(assignedClasses.map(c => ({ id: c, name: c })));
+          setSubjects(assignedSubjects.map(s => ({ id: s, name: s })));
+        }
+      } catch (error) {
+        console.error("Error fetching teacher dropdowns", error);
+      }
     };
     fetchDropdowns();
-  }, []);
+  }, [currentUser]);
 
   const handleFetchStudents = async () => {
-    if (!selectedClass) return alert("Select a class first");
+    if (!selectedClass) return showAlert("Select a class first", "error");
     setLoading(true);
     try {
       const q = query(collection(db, 'users'), where('role', '==', 'student'));
@@ -52,7 +61,7 @@ export default function MarkAttendance() {
 
     } catch (error) {
       console.error(error);
-      alert("Failed to fetch students");
+      showAlert("Failed to fetch students", "error");
     } finally {
       setLoading(false);
     }
@@ -67,7 +76,7 @@ export default function MarkAttendance() {
 
   const handleSubmit = async () => {
     if (!selectedClass || !selectedSubject || !date || !lectureNumber) {
-      return alert("Fill all details");
+      return showAlert("Fill all details", "error");
     }
     setSubmitting(true);
     try {
@@ -84,11 +93,11 @@ export default function MarkAttendance() {
         });
       });
       await Promise.all(batchPromises);
-      alert("Attendance marked successfully");
+      showAlert("Attendance marked successfully", "success");
       setStudents([]); // Reset screen
     } catch (error) {
       console.error(error);
-      alert("Failed to mark attendance");
+      showAlert("Failed to mark attendance", "error");
     } finally {
       setSubmitting(false);
     }
@@ -111,7 +120,7 @@ export default function MarkAttendance() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
           <select value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} className="w-full border border-gray-300 rounded-md p-2">
             <option value="">Select Subject...</option>
-            {subjects.map(s => <option key={s.id} value={s.name}>{s.name} ({s.code})</option>)}
+            {subjects.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
           </select>
         </div>
         <div>

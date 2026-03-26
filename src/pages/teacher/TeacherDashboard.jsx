@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebase/config';
-import { collection, query, where, getCountFromServer, getDoc, doc, getDocs, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, getCountFromServer, getDoc, doc, getDocs, limit, orderBy, deleteDoc } from 'firebase/firestore';
+import { useModal } from '../../context/ModalContext';
+import { Trash2 } from 'lucide-react';
 
 export default function TeacherDashboard() {
   const { currentUser } = useAuth();
+  const { showConfirm, showAlert } = useModal();
   const [stats, setStats] = useState({ assignedClasses: 0, totalLectures: 0 });
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -60,7 +63,50 @@ export default function TeacherDashboard() {
     };
     
     fetchStats();
+    fetchStats();
   }, [currentUser]);
+
+  const handleClearAll = (type) => {
+    const typeLabel = type === 'attendance' ? 'Attendance Logs' : 'Marks Logs';
+    showConfirm(`Are you sure you want to clear ALL your ${typeLabel}? This action cannot be undone.`, async () => {
+      try {
+        const q = query(collection(db, type), where("teacherId", "==", currentUser.uid));
+        const snap = await getDocs(q);
+        const deletePromises = snap.docs.map(d => deleteDoc(doc(db, type, d.id)));
+        await Promise.all(deletePromises);
+        
+        showAlert(`All ${typeLabel} cleared successfully.`, "success");
+        if (type === 'attendance') {
+           setRecentAttendance([]);
+           setStats(prev => ({ ...prev, totalLectures: 0 }));
+        }
+        if (type === 'marks') {
+           setRecentMarks([]);
+        }
+      } catch (error) {
+        console.error(`Error clearing ${type}:`, error);
+        showAlert(`Failed to clear ${typeLabel}.`, "error");
+      }
+    });
+  };
+
+  const handleDeleteLog = (id, type) => {
+    showConfirm("Are you sure you want to delete this log entry?", async () => {
+      try {
+        await deleteDoc(doc(db, type, id));
+        if (type === 'attendance') {
+          setRecentAttendance(prev => prev.filter(item => item.id !== id));
+          setStats(prev => ({ ...prev, totalLectures: Math.max(0, prev.totalLectures - 1) }));
+        } else {
+          setRecentMarks(prev => prev.filter(item => item.id !== id));
+        }
+        showAlert("Log entry deleted.", "success");
+      } catch (error) {
+        console.error("Error deleting log:", error);
+        showAlert("Failed to delete log entry.", "error");
+      }
+    });
+  };
 
   return (
     <div>
@@ -79,36 +125,67 @@ export default function TeacherDashboard() {
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-gray-500 text-sm font-medium">Assigned Classes</h3>
-          <p className="text-3xl font-bold text-gray-900 mt-2">
-            {loading ? "..." : stats.assignedClasses}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-center">
           <h3 className="text-gray-500 text-sm font-medium">Lectures Marked</h3>
           <p className="text-3xl font-bold text-gray-900 mt-2">
              {loading ? "..." : stats.totalLectures}
           </p>
         </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-gray-500 text-sm font-medium mb-3">Assigned Classes</h3>
+          <div className="flex flex-wrap gap-2">
+            {loading ? (
+              <span className="text-gray-400 text-sm">Loading...</span>
+            ) : profile?.assignedClasses?.length > 0 ? (
+              profile.assignedClasses.map((c, i) => (
+                <span key={i} className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-md text-xs font-semibold border border-indigo-100">{c}</span>
+              ))
+            ) : (
+              <span className="text-gray-400 text-sm italic">None assigned</span>
+            )}
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-gray-500 text-sm font-medium mb-3">Assigned Subjects</h3>
+          <div className="flex flex-wrap gap-2">
+            {loading ? (
+              <span className="text-gray-400 text-sm">Loading...</span>
+            ) : profile?.subjects?.length > 0 ? (
+              profile.subjects.map((s, i) => (
+                <span key={i} className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-md text-xs font-semibold border border-emerald-100">{s}</span>
+              ))
+            ) : (
+              <span className="text-gray-400 text-sm italic">None assigned</span>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-gray-50">
+          <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
             <h3 className="font-semibold text-gray-800">Recent Attendance Logs</h3>
+            {recentAttendance.length > 0 && (
+              <button 
+                onClick={() => handleClearAll('attendance')}
+                className="text-xs text-red-600 hover:text-red-800 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors"
+                title="Clear all recorded attendance logs"
+              >
+                Clear All Logs
+              </button>
+            )}
           </div>
           <div className="p-4">
             {recentAttendance.length > 0 ? (
               <div className="space-y-3">
                 {recentAttendance.map(a => (
-                  <div key={a.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                  <div key={a.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg group">
                     <div>
                       <p className="font-medium text-gray-900 text-sm">{studentMap[a.studentId] || 'Unknown Student'}</p>
                       <p className="text-xs text-gray-500">{a.subjectId} - Lecture {a.lectureNumber} - {a.classId}</p>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-3">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                         a.status === 'present' ? 'bg-green-100 text-green-800' :
                         a.status === 'absent' ? 'bg-red-100 text-red-800' :
@@ -116,6 +193,13 @@ export default function TeacherDashboard() {
                       }`}>
                         {a.status.toUpperCase()}
                       </span>
+                      <button 
+                        onClick={() => handleDeleteLog(a.id, 'attendance')}
+                        className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1"
+                        title="Delete Log"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -127,20 +211,38 @@ export default function TeacherDashboard() {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-gray-50">
+          <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
             <h3 className="font-semibold text-gray-800">Recent Marks Uploaded</h3>
+            {recentMarks.length > 0 && (
+              <button 
+                onClick={() => handleClearAll('marks')}
+                className="text-xs text-red-600 hover:text-red-800 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors"
+                title="Clear all recorded marks logs"
+              >
+                Clear All Logs
+              </button>
+            )}
           </div>
           <div className="p-4">
             {recentMarks.length > 0 ? (
               <div className="space-y-3">
                 {recentMarks.map(m => (
-                  <div key={m.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                  <div key={m.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg group">
                     <div>
                       <p className="font-medium text-gray-900 text-sm">{studentMap[m.studentId] || 'Unknown Student'}</p>
                       <p className="text-xs text-gray-500">{m.subjectId} - {m.examType.replace('_', ' ')}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-gray-900">{m.marksObtained} <span className="text-xs text-gray-500 font-normal">/ {m.maxMarks}</span></p>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-gray-900">{m.marksObtained} <span className="text-xs text-gray-500 font-normal">/ {m.maxMarks}</span></p>
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteLog(m.id, 'marks')}
+                        className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1"
+                        title="Delete Log"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ))}
