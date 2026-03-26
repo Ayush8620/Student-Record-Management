@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase/config';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
-import { Plus, Loader2, Book, Layers } from 'lucide-react';
+import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { Plus, Loader2, Book, Layers, Trash2 } from 'lucide-react';
 import { useModal } from '../../context/ModalContext';
 
 export default function Academics() {
-  const { showAlert } = useModal();
+  const { showAlert, showConfirm } = useModal();
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
@@ -45,6 +45,30 @@ export default function Academics() {
     fetchClasses();
     fetchSubjects();
   }, []);
+
+  const handleDeleteClass = (id) => {
+    showConfirm("Are you sure you want to delete this class?", async () => {
+      try {
+        await deleteDoc(doc(db, "classes", id));
+        showAlert("Class deleted successfully", "success");
+        fetchClasses();
+      } catch (error) {
+        showAlert("Failed to delete class", "error");
+      }
+    });
+  };
+
+  const handleDeleteSubject = (id) => {
+    showConfirm("Are you sure you want to delete this subject?", async () => {
+      try {
+        await deleteDoc(doc(db, "subjects", id));
+        showAlert("Subject deleted successfully", "success");
+        fetchSubjects();
+      } catch (error) {
+        showAlert("Failed to delete subject", "error");
+      }
+    });
+  };
 
   const handleAddClass = async (e) => {
     e.preventDefault();
@@ -107,9 +131,18 @@ export default function Academics() {
               ) : classes.length === 0 ? (
                 <li className="p-4 text-center text-gray-500">No classes found.</li>
               ) : classes.map(c => (
-                <li key={c.id} className="p-4 hover:bg-gray-50">
-                  <div className="font-medium text-gray-900">{c.name}</div>
-                  <div className="text-sm text-gray-500">{c.department} - Sem {c.semester}</div>
+                <li key={c.id} className="p-4 hover:bg-gray-50 flex justify-between items-center">
+                  <div>
+                    <div className="font-medium text-gray-900">{c.name}</div>
+                    <div className="text-sm text-gray-500">{c.department} - Sem {c.semester}</div>
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteClass(c.id)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    title="Delete Class"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </li>
               ))}
             </ul>
@@ -143,8 +176,17 @@ export default function Academics() {
                 <li className="p-4 text-center text-gray-500">No subjects found.</li>
               ) : subjects.map(s => (
                 <li key={s.id} className="p-4 hover:bg-gray-50 flex justify-between items-center">
-                  <div className="font-medium text-gray-900">{s.name}</div>
-                  <div className="text-sm text-gray-500 bg-gray-100 px-2 rounded-md">{s.code}</div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">{s.name}</div>
+                    <div className="text-sm text-gray-500 bg-gray-100 px-2 rounded-md inline-flex mt-1">{s.code}</div>
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteSubject(s.id)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors ml-4"
+                    title="Delete Subject"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </li>
               ))}
             </ul>

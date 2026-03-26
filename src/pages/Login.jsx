@@ -4,6 +4,7 @@ import { auth, db } from "../firebase/config";
 import { doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Lock, Mail } from "lucide-react";
+import bgImage from "../assets/bg-image.jpeg";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -42,8 +43,13 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-xl border border-gray-100">
+    <div
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-cover bg-center bg-no-repeat relative"
+      style={{ backgroundImage: `url(${bgImage})` }}
+    >
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-0"></div>
+
+      <div className="max-w-md w-full space-y-8 bg-white/95 backdrop-blur-md p-8 rounded-xl shadow-2xl border border-white/20 relative z-10">
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-primary-100 flex items-center justify-center rounded-full mb-4">
             <GraduationCap className="h-8 w-8 text-primary-600" />
@@ -107,9 +113,8 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                loading ? "bg-primary-400 cursor-not-allowed" : "bg-primary-600 hover:bg-primary-700"
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors`}
+              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white ${loading ? "bg-primary-400 cursor-not-allowed" : "bg-primary-600 hover:bg-primary-700"
+                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors`}
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
