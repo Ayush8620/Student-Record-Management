@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase/config';
 import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { Plus, Loader2, Book, Layers, Trash2 } from 'lucide-react';
 import { useModal } from '../../context/ModalContext';
 
 export default function Academics() {
@@ -99,49 +98,73 @@ export default function Academics() {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Academics Management</h1>
+    <div className="p-8 max-w-7xl mx-auto w-full">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-3xl font-extrabold text-on-surface tracking-tight font-headline">Academic Infrastructure</h2>
+          <p className="text-on-surface-variant mt-1 font-medium text-sm">Manage class structures, departments, and course catalog.</p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Classes Section */}
-        <div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Layers className="text-primary-600" />
-              <h2 className="text-lg font-medium">Add Class</h2>
+        <div className="flex flex-col gap-6">
+          <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <span className="material-symbols-outlined text-primary">domain</span>
+              <h2 className="text-lg font-bold text-on-surface font-headline">Add Class Group</h2>
             </div>
             <form onSubmit={handleAddClass} className="space-y-4">
-              <input required type="text" placeholder="Class Name (e.g. CSE_4_A)" value={classForm.name} onChange={e => setClassForm({...classForm, name: e.target.value})} className="w-full border border-gray-300 rounded-md p-2" />
-              <input required type="text" placeholder="Department" value={classForm.department} onChange={e => setClassForm({...classForm, department: e.target.value})} className="w-full border border-gray-300 rounded-md p-2" />
-              <input required type="number" placeholder="Semester" value={classForm.semester} onChange={e => setClassForm({...classForm, semester: e.target.value})} className="w-full border border-gray-300 rounded-md p-2" />
-              <button disabled={isAddingClass} className="w-full bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 flex justify-center items-center gap-2">
-                {isAddingClass ? <Loader2 className="animate-spin w-4 h-4"/> : <Plus className="w-4 h-4"/>} Add Class
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 ml-1">Class Name</label>
+                <input required type="text" placeholder="e.g. CSE_4_A" value={classForm.name} onChange={e => setClassForm({...classForm, name: e.target.value})} className="w-full bg-surface-container-low border-transparent focus:bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg p-3 text-sm transition-all outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 ml-1">Department</label>
+                  <input required type="text" placeholder="e.g. CSE" value={classForm.department} onChange={e => setClassForm({...classForm, department: e.target.value})} className="w-full bg-surface-container-low border-transparent focus:bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg p-3 text-sm transition-all outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 ml-1">Semester</label>
+                  <input required type="number" placeholder="e.g. 4" value={classForm.semester} onChange={e => setClassForm({...classForm, semester: e.target.value})} className="w-full bg-surface-container-low border-transparent focus:bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg p-3 text-sm transition-all outline-none" />
+                </div>
+              </div>
+              <button disabled={isAddingClass} className={`w-full flex justify-center items-center gap-2 px-6 py-2.5 rounded-lg shadow-sm font-bold text-sm transition-all active:scale-[0.98] mt-2 ${isAddingClass ? "bg-primary/50 text-white cursor-not-allowed" : "bg-primary hover:bg-primary-container text-on-primary shadow-primary/20"}`}>
+                {isAddingClass ? <span className="material-symbols-outlined text-[18px] animate-spin">sync</span> : <span className="material-symbols-outlined text-[18px]">add</span>} 
+                Create Class
               </button>
             </form>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-             <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-              <h3 className="font-medium text-gray-800">Classes List</h3>
+          <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 overflow-hidden flex-1">
+             <div className="p-4 border-b border-outline-variant/20 bg-gradient-to-r from-primary to-primary-container text-on-primary flex justify-between items-center">
+              <h3 className="text-xs uppercase tracking-wider font-bold">Class Directory</h3>
             </div>
-            <ul className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+            <ul className="divide-y divide-outline-variant/10 max-h-[500px] overflow-y-auto custom-scrollbar">
               {loadingClasses ? (
-                <li className="p-4 text-center text-gray-500">Loading...</li>
+                <li className="p-8 text-center text-on-surface-variant flex flex-col items-center">
+                  <span className="material-symbols-outlined text-primary animate-spin mb-2">sync</span> Loading...
+                </li>
               ) : classes.length === 0 ? (
-                <li className="p-4 text-center text-gray-500">No classes found.</li>
+                <li className="p-8 text-center text-on-surface-variant">No classes registered.</li>
               ) : classes.map(c => (
-                <li key={c.id} className="p-4 hover:bg-gray-50 flex justify-between items-center">
-                  <div>
-                    <div className="font-medium text-gray-900">{c.name}</div>
-                    <div className="text-sm text-gray-500">{c.department} - Sem {c.semester}</div>
+                <li key={c.id} className="p-4 hover:bg-surface-container-lowest/80 transition-colors flex justify-between items-center group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary-fixed/30 text-primary-fixed-variant flex items-center justify-center">
+                      <span className="material-symbols-outlined">group</span>
+                    </div>
+                    <div>
+                      <div className="font-bold text-on-surface">{c.name}</div>
+                      <div className="text-xs font-medium text-outline uppercase">{c.department} &bull; Semester {c.semester}</div>
+                    </div>
                   </div>
                   <button 
                     onClick={() => handleDeleteClass(c.id)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    className="p-2 text-outline hover:text-error hover:bg-error-container/50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
                     title="Delete Class"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
                   </button>
                 </li>
               ))}
@@ -150,42 +173,51 @@ export default function Academics() {
         </div>
 
         {/* Subjects Section */}
-        <div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Book className="text-primary-600" />
-              <h2 className="text-lg font-medium">Add Subject</h2>
+        <div className="flex flex-col gap-6">
+          <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <span className="material-symbols-outlined text-tertiary">book_4</span>
+              <h2 className="text-lg font-bold text-on-surface font-headline">Add Course Subject</h2>
             </div>
             <form onSubmit={handleAddSubject} className="space-y-4">
-              <input required type="text" placeholder="Subject Name (e.g. DBMS)" value={subjectForm.name} onChange={e => setSubjectForm({...subjectForm, name: e.target.value})} className="w-full border border-gray-300 rounded-md p-2" />
-              <input required type="text" placeholder="Subject Code (e.g. CS401)" value={subjectForm.code} onChange={e => setSubjectForm({...subjectForm, code: e.target.value})} className="w-full border border-gray-300 rounded-md p-2" />
-              <button disabled={isAddingSubject} className="w-full bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 flex justify-center items-center gap-2">
-                {isAddingSubject ? <Loader2 className="animate-spin w-4 h-4"/> : <Plus className="w-4 h-4"/>} Add Subject
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 ml-1">Subject Name</label>
+                <input required type="text" placeholder="e.g. Database Management Systems" value={subjectForm.name} onChange={e => setSubjectForm({...subjectForm, name: e.target.value})} className="w-full bg-surface-container-low border-transparent focus:bg-surface-container-lowest focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 rounded-lg p-3 text-sm transition-all outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 ml-1">Course Code</label>
+                <input required type="text" placeholder="e.g. CS401" value={subjectForm.code} onChange={e => setSubjectForm({...subjectForm, code: e.target.value})} className="w-full bg-surface-container-low border-transparent focus:bg-surface-container-lowest focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 rounded-lg p-3 text-sm transition-all outline-none" />
+              </div>
+              <button disabled={isAddingSubject} className={`w-full flex justify-center items-center gap-2 px-6 py-2.5 rounded-lg shadow-sm font-bold text-sm transition-all active:scale-[0.98] mt-2 ${isAddingSubject ? "bg-tertiary/50 text-white cursor-not-allowed" : "bg-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container text-on-tertiary shadow-tertiary/20"}`}>
+                {isAddingSubject ? <span className="material-symbols-outlined text-[18px] animate-spin">sync</span> : <span className="material-symbols-outlined text-[18px]">add</span>} 
+                Add Subject
               </button>
             </form>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-             <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-              <h3 className="font-medium text-gray-800">Subjects List</h3>
+          <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 overflow-hidden flex-1">
+             <div className="p-4 border-b border-outline-variant/20 bg-gradient-to-r from-tertiary to-tertiary-container text-on-tertiary flex justify-between items-center">
+              <h3 className="text-xs uppercase tracking-wider font-bold">Course Catalog</h3>
             </div>
-            <ul className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+            <ul className="divide-y divide-outline-variant/10 max-h-[500px] overflow-y-auto custom-scrollbar">
               {loadingSubjects ? (
-                <li className="p-4 text-center text-gray-500">Loading...</li>
+                <li className="p-8 text-center text-on-surface-variant flex flex-col items-center">
+                  <span className="material-symbols-outlined text-tertiary animate-spin mb-2">sync</span> Loading...
+                </li>
               ) : subjects.length === 0 ? (
-                <li className="p-4 text-center text-gray-500">No subjects found.</li>
+                <li className="p-8 text-center text-on-surface-variant">No subjects cataloged.</li>
               ) : subjects.map(s => (
-                <li key={s.id} className="p-4 hover:bg-gray-50 flex justify-between items-center">
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{s.name}</div>
-                    <div className="text-sm text-gray-500 bg-gray-100 px-2 rounded-md inline-flex mt-1">{s.code}</div>
+                <li key={s.id} className="p-4 hover:bg-surface-container-lowest/80 transition-colors flex justify-between items-center group">
+                  <div className="flex-1 flex flex-col items-start">
+                    <div className="font-bold text-on-surface">{s.name}</div>
+                    <div className="text-[11px] font-extrabold text-tertiary bg-tertiary-fixed/40 px-2 py-0.5 rounded-md inline-flex mt-1 border border-tertiary/20">{s.code}</div>
                   </div>
                   <button 
                     onClick={() => handleDeleteSubject(s.id)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors ml-4"
+                    className="p-2 text-outline hover:text-error hover:bg-error-container/50 rounded-md transition-colors ml-4 opacity-0 group-hover:opacity-100"
                     title="Delete Subject"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
                   </button>
                 </li>
               ))}

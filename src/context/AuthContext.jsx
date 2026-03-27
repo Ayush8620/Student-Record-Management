@@ -45,7 +45,13 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {loading ? (
+        <div className="w-full h-screen flex items-center justify-center text-xl font-bold bg-white text-gray-800">
+          Loading Authentication... Please ensure Firebase config (.env) is valid.
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }

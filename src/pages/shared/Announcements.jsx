@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { db } from '../../firebase/config';
 import { collection, query, addDoc, getDocs, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
-import { Megaphone, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useModal } from '../../context/ModalContext';
 
 export default function Announcements() {
@@ -11,6 +10,7 @@ export default function Announcements() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [filter, setFilter] = useState('all');
   
   const [form, setForm] = useState({ title: '', message: '', targetRole: 'all' });
 
@@ -68,61 +68,122 @@ export default function Announcements() {
     });
   };
 
+  const filteredAnnouncements = announcements.filter((a) => {
+    const importantMatch = filter === 'all' || (filter === 'important' && (a.isImportant || /important/i.test(a.title) || /important/i.test(a.message)));
+
+    return importantMatch;
+  });
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Megaphone className="text-primary-600 w-8 h-8" />
-        <h1 className="text-2xl font-semibold text-gray-900">Announcements</h1>
+    <div className="p-8 max-w-7xl mx-auto w-full">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center shadow-sm border border-primary/20">
+            <span className="material-symbols-outlined text-3xl" style={{fontVariationSettings: "'FILL' 1"}}>campaign</span>
+          </div>
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-tight font-headline bg-gradient-to-r from-primary to-primary-container text-transparent bg-clip-text">Academic Notices</h2>
+            <p className="text-on-surface-variant mt-1 font-medium text-sm">Vital updates and official campus announcements.</p>
+          </div>
+        </div>
       </div>
 
       {userRole === 'admin' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-medium mb-4">Post New Notice</h2>
+        <div className="surface-card p-6 mb-8 group">
+          <div className="flex items-center gap-2 mb-6">
+            <span className="material-symbols-outlined text-primary">add_circle</span>
+            <h2 className="text-lg font-bold text-on-surface font-headline">Post New Notice</h2>
+          </div>
           <form onSubmit={handleAddSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input required type="text" placeholder="Title" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="border border-gray-300 rounded-md p-2" />
-              <select value={form.targetRole} onChange={e => setForm({...form, targetRole: e.target.value})} className="border border-gray-300 rounded-md p-2">
-                <option value="all">All Users</option>
-                <option value="student">Students</option>
-                <option value="teacher">Teachers</option>
+              <input 
+                required 
+                type="text" 
+                placeholder="Notice Title" 
+                value={form.title} 
+                onChange={e => setForm({...form, title: e.target.value})} 
+                className="bg-surface-container-low border border-outline-variant/30 rounded-lg p-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+              />
+              <select 
+                value={form.targetRole} 
+                onChange={e => setForm({...form, targetRole: e.target.value})} 
+                className="bg-surface-container-low border border-outline-variant/30 rounded-lg p-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+              >
+                <option value="all">All Audiences</option>
+                <option value="student">Students Only</option>
+                <option value="teacher">Teachers Only</option>
               </select>
             </div>
-            <textarea required placeholder="Announcement Message..." value={form.message} onChange={e => setForm({...form, message: e.target.value})} className="w-full border border-gray-300 rounded-md p-2 h-24"></textarea>
-            <button disabled={isAdding} className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 flex items-center gap-2">
-              {isAdding ? <Loader2 className="animate-spin w-4 h-4"/> : <Plus className="w-4 h-4"/>} Post Announcement
+            <textarea 
+              required 
+              placeholder="Announcement Message..." 
+              value={form.message} 
+              onChange={e => setForm({...form, message: e.target.value})} 
+              className="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg p-3 h-32 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+            ></textarea>
+            <button 
+              disabled={isAdding} 
+              className="bg-primary hover:bg-primary-container text-on-primary px-6 py-2.5 rounded-lg flex items-center gap-2 font-bold shadow-sm shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {isAdding ? <span className="material-symbols-outlined animate-spin">sync</span> : <span className="material-symbols-outlined">send</span>}
+              Post Announcement
             </button>
           </form>
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+      <div className="surface-card flex flex-col divide-y divide-outline-variant/10">
+        <div className="px-6 py-4 flex flex-wrap gap-2 items-center">
+          {['all','important'].map((type) => (
+            <button
+              key={type}
+              onClick={() => setFilter(type)}
+              className={`px-3 py-1.5 rounded-full font-semibold text-sm ${filter === type ? 'bg-primary text-white' : 'bg-surface-container text-on-surface'} transition-all`}
+            >
+              {type === 'all' ? 'All' : 'Important'}
+            </button>
+          ))}
+          <span className="text-xs text-on-surface-variant ml-auto">
+            Showing {filter === 'all' ? 'all' : 'important'} announcements
+          </span>
+        </div>
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading notices...</div>
-        ) : announcements.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No announcements found.</div>
+          <div className="p-12 text-center flex flex-col items-center gap-2">
+            <span className="material-symbols-outlined text-primary animate-spin">sync</span>
+            <p className="text-on-surface-variant font-medium text-sm">Loading notices...</p>
+          </div>
+        ) : filteredAnnouncements.length === 0 ? (
+          <div className="p-12 text-center flex flex-col items-center gap-3">
+             <span className="material-symbols-outlined text-outline text-5xl">campaign</span>
+             <p className="text-on-surface-variant font-bold">No announcements match the selected filter.</p>
+          </div>
         ) : (
-          announcements.map(a => (
-            <div key={a.id} className="p-6 hover:bg-gray-50 transition-colors">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{a.title}</h3>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-full uppercase">
+          filteredAnnouncements.map(a => (
+            <div key={a.id} className="p-8 hover:bg-surface-container-low/30 transition-colors group">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-extrabold text-on-surface font-headline">{a.title}</h3>
+                <div className="flex items-center gap-4">
+                  <span className="text-[10px] font-extrabold bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full uppercase tracking-widest border border-outline-variant/20">
                     {a.targetRole}
                   </span>
                   {userRole === 'admin' && (
                     <button 
                       onClick={() => handleDelete(a.id)}
-                      className="text-red-500 hover:bg-red-50 p-1 rounded-md transition-colors"
+                      className="text-outline hover:text-error hover:bg-error-container/20 p-2 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                       title="Delete Announcement"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <span className="material-symbols-outlined text-[20px]">delete</span>
                     </button>
                   )}
                 </div>
               </div>
-              <p className="text-gray-700 whitespace-pre-wrap">{a.message}</p>
-              <div className="mt-4 text-xs text-gray-400">
-                Posted by {a.createdBy} on {new Date(a.createdAt).toLocaleDateString()}
+              <p className="text-on-surface-variant leading-relaxed font-medium mb-6 whitespace-pre-wrap">{a.message}</p>
+              <div className="flex items-center gap-2 text-[11px] font-bold text-outline uppercase tracking-wider">
+                <span className="material-symbols-outlined text-sm">person</span>
+                <span>{a.createdBy}</span>
+                <span className="text-outline-variant">•</span>
+                <span className="material-symbols-outlined text-sm">calendar_today</span>
+                <span>{new Date(a.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
           ))

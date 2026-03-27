@@ -24,43 +24,73 @@ export default function MyAttendance() {
   }, [currentUser]);
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">My Attendance Log</h1>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading details...</div>
-        ) : attendance.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No attendance records found.</div>
-        ) : (
-          <table className="w-full text-left text-sm border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-gray-600">
-                <th className="p-4 font-medium">Date</th>
-                <th className="p-4 font-medium">Subject</th>
-                <th className="p-4 font-medium">Lecture</th>
-                <th className="p-4 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {attendance.map(a => (
-                <tr key={a.id} className="hover:bg-gray-50">
-                  <td className="p-4 text-gray-500">{new Date(a.date).toLocaleDateString()}</td>
-                  <td className="p-4 font-medium text-gray-900">{a.subjectId}</td>
-                  <td className="p-4 text-gray-600">Lecture {a.lectureNumber}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      a.status === 'present' ? 'bg-green-100 text-green-800' :
-                      a.status === 'absent' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {a.status.toUpperCase()}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+    <div className="p-8 max-w-7xl mx-auto w-full">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-3xl font-extrabold text-on-surface tracking-tight font-headline">Attendance Log</h2>
+          <p className="text-on-surface-variant mt-1 font-medium text-sm">Review your day-to-day lecture presence.</p>
+        </div>
+      </div>
+
+      <div className="surface-card flex flex-col">
+         <div className="p-4 px-6 border-b border-outline-variant/20 bg-surface-container-low flex justify-between items-center bg-gradient-to-r from-primary-container/20 to-transparent">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-on-surface flex items-center gap-2">
+               <span className="material-symbols-outlined text-primary text-[18px]">history</span>
+               Recent Records
+            </h3>
+         </div>
+         <div className="p-0 flex-1 flex flex-col">
+            {loading ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
+                 <span className="material-symbols-outlined text-primary text-4xl animate-spin mb-4">sync</span>
+                 <p className="text-on-surface-variant font-medium text-sm">Loading attendance ledger...</p>
+              </div>
+            ) : attendance.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
+                 <span className="material-symbols-outlined text-outline text-5xl mb-4">event_busy</span>
+                 <p className="text-on-surface-variant font-bold text-base">No Records Found</p>
+                 <p className="text-outline text-sm mt-1">Your attendance hasn't been logged yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto text-on-surface">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-surface-container-low text-on-surface-variant text-[11px] uppercase tracking-widest font-extrabold border-b border-outline-variant/40">
+                      <th className="py-4 px-6 h-12">Date</th>
+                      <th className="py-4 px-6 h-12">Subject</th>
+                      <th className="py-4 px-6 h-12">Lecture</th>
+                      <th className="py-4 px-6 h-12 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm divide-y divide-outline-variant/10">
+                    {attendance.map(a => (
+                      <tr key={a.id} className="hover:bg-surface-container-lowest/80 transition-colors">
+                        <td className="py-4 px-6 font-medium text-on-surface-variant">
+                          <span className="bg-surface-container px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide border border-outline-variant/40">
+                             {new Date(a.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 font-bold text-on-surface">{a.subjectId}</td>
+                        <td className="py-4 px-6 font-medium text-outline">Lec {a.lectureNumber}</td>
+                        <td className="py-4 px-6 text-center">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 font-extrabold uppercase tracking-wide rounded-full border text-[10px] transition-colors ${
+                            a.status === 'present' ? 'bg-green-50 text-green-700 border-green-200' :
+                            a.status === 'absent' ? 'bg-error-container/20 text-error border-error-container/30' :
+                            'bg-yellow-50 text-yellow-700 border-yellow-200'
+                          }`}>
+                            {a.status === 'present' ? <span className="material-symbols-outlined text-[14px]">check_circle</span> :
+                             a.status === 'absent' ? <span className="material-symbols-outlined text-[14px]">cancel</span> :
+                             <span className="material-symbols-outlined text-[14px]">directions_run</span>}
+                            {a.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+         </div>
       </div>
     </div>
   );
