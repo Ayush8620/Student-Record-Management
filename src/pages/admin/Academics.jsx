@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase/config';
-<<<<<<< HEAD
-import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
-=======
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
-import { Plus, Loader2, Book, Layers, Trash2 } from 'lucide-react';
->>>>>>> 287e23434939da610a00629aed24e55cfc090dc8
 import { useModal } from '../../context/ModalContext';
 
 export default function Academics() {

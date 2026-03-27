@@ -82,8 +82,7 @@ export default function ManageStudents() {
         createdAt: new Date().toISOString()
       });
 
-<<<<<<< HEAD
-=======
+
       // 4. Add to 'students' collection
       await setDoc(doc(db, "students", newUserId), {
         name: formData.name,
@@ -95,7 +94,6 @@ export default function ManageStudents() {
       });
 
       // Reset form and refresh list
->>>>>>> 287e23434939da610a00629aed24e55cfc090dc8
       setFormData({ name: '', email: '', password: '', department: '', semester: '', classId: '' });
       fetchStudents();
       showAlert("Student added successfully!", "success");
