@@ -64,7 +64,7 @@ export const ModalProvider = ({ children }) => {
                   <button onClick={close} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium">
                     Cancel
                   </button>
-                  <button onClick={handleConfirm} className="px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors font-medium shadow-sm">
+                  <button onClick={handleConfirm} className="px-4 py-2 bg-primary-600 text-Red hover:bg-primary-700 rounded-lg transition-colors font-medium shadow-sm">
                     Confirm
                   </button>
                 </>
