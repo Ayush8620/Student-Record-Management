@@ -123,12 +123,12 @@ export default function Login() {
             </div>
 
             {/* Remember Me */}
-            <div className="flex items-center px-1">
+            {/* <div className="flex items-center px-1">
               <input className="h-4 w-4 text-primary focus:ring-primary border-outline-variant rounded transition-all" id="remember-me" name="remember-me" type="checkbox" />
               <label className="ml-3 block text-sm text-on-surface-variant" htmlFor="remember-me">
                 Stay signed in for 30 days
               </label>
-            </div>
+            </div> */}
 
             {/* Login Button */}
             <button
@@ -142,11 +142,11 @@ export default function Login() {
           </form>
 
           {/* Footer Assistance */}
-          <footer className="mt-10 pt-8 border-t border-outline-variant/10 text-center">
+          {/* <footer className="mt-10 pt-8 border-t border-outline-variant/10 text-center">
             <p className="text-sm text-on-surface-variant">
               New user? <a className="text-primary font-bold hover:underline" href="#">Request access</a>
             </p>
-          </footer>
+          </footer> */}
         </div>
 
         {/* System Status / Security Note */}
